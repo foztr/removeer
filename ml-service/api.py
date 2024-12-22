@@ -4,6 +4,7 @@ from rembg import remove
 from PIL import Image
 import io
 import os
+import gc
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -33,18 +34,47 @@ def process_image():
         # Read the image
         input_image = Image.open(file.stream)
         
+        # Convert to RGB if needed
+        if input_image.mode not in ('RGB', 'RGBA'):
+            input_image = input_image.convert('RGB')
+        
         # Process the image with rembg
-        output_image = remove(input_image)
+        try:
+            output_image = remove(input_image)
+            # Clear input image from memory
+            input_image.close()
+            del input_image
+        except Exception as e:
+            print(f"Error in remove operation: {str(e)}")
+            raise
         
         # Save to bytes
-        img_byte_arr = io.BytesIO()
-        output_image.save(img_byte_arr, format='PNG')
-        img_byte_arr.seek(0)
+        try:
+            img_byte_arr = io.BytesIO()
+            output_image.save(img_byte_arr, format='PNG', optimize=True)
+            img_byte_arr.seek(0)
+            
+            # Clear output image from memory
+            output_image.close()
+            del output_image
+        except Exception as e:
+            print(f"Error saving image: {str(e)}")
+            raise
         
-        return send_file(img_byte_arr, mimetype='image/png')
+        # Force garbage collection
+        gc.collect()
+        
+        return send_file(
+            img_byte_arr,
+            mimetype='image/png',
+            as_attachment=True,
+            download_name='removed_bg.png'
+        )
     
     except Exception as e:
         print(f"Error processing image: {str(e)}")
+        # Force garbage collection on error
+        gc.collect()
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
