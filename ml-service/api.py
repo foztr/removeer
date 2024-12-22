@@ -17,7 +17,7 @@ def health_check():
     return jsonify({
         "status": "healthy", 
         "service": "removeer-ml",
-        "port": os.environ.get("PORT", "Not set")
+        "port": os.environ.get("PORT", 5001)
     }), 200
 
 @app.route('/process', methods=['POST'])
@@ -75,6 +75,7 @@ def process_image():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    # Let Gunicorn handle the port binding
-    app.run()
+    # Development server configuration
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host='0.0.0.0', port=port, debug=True)
   
