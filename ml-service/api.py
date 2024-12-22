@@ -9,9 +9,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Get port from environment variable
-port = int(os.environ.get("PORT", 10000))
-
 app = Flask(__name__)
 CORS(app)
 
@@ -20,7 +17,7 @@ def health_check():
     return jsonify({
         "status": "healthy", 
         "service": "removeer-ml",
-        "port": port
+        "port": os.environ.get("PORT", "Not set")
     }), 200
 
 @app.route('/process', methods=['POST'])
@@ -78,6 +75,6 @@ def process_image():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    print(f"Starting server on port {port}")
-    app.run(host="0.0.0.0", port=port)
+    # Let Gunicorn handle the port binding
+    app.run()
   
