@@ -8,12 +8,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Get port from environment variable
+port = int(os.environ.get("PORT", 10000))
+
 app = Flask(__name__)
 CORS(app)
 
 @app.route('/')
 def health_check():
-    return jsonify({"status": "healthy", "service": "removeer-ml"}), 200
+    return jsonify({
+        "status": "healthy", 
+        "service": "removeer-ml",
+        "port": port
+    }), 200
 
 @app.route('/process', methods=['POST'])
 def process_image():
@@ -41,6 +48,6 @@ def process_image():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5001))
+    print(f"Starting server on port {port}")
     app.run(host="0.0.0.0", port=port)
   
