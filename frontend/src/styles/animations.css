@@ -1,0 +1,63 @@
+@keyframes slide-left {
+  0% {
+    clip-path: polygon(100% 0, 100% 0, 100% 100%, 100% 100%);
+  }
+  100% {
+    clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+  }
+}
+
+@keyframes pulse-handle {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.animate-slide-left {
+  animation: slide-left 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.handle-pulse {
+  animation: pulse-handle 2s ease-in-out infinite;
+}
+
+.demo-container {
+  position: relative;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.demo-container:hover .divider-line {
+  background-color: #2563eb;
+}
+
+.demo-container:hover .handle {
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.demo-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.demo-transition {
+  transition: all 0.5s ease-in-out;
+}
+
+.demo-overlay {
+  transition: opacity 0.3s ease-in-out;
+} 

@@ -1,0 +1,12 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="256" fill="#2A90FE"/>
+  
+  <!-- Text "er" -->
+  <text x="256" y="300" 
+        text-anchor="middle" 
+        fill="white" 
+        style="font-size: 220px; font-family: Inter, system-ui; font-weight: 900; letter-spacing: -0.02em;">
+    er
+  </text>
+</svg> 

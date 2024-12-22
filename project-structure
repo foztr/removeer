@@ -1,0 +1,25 @@
+background-removal-app/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ImageUpload.jsx
+│   │   │   ├── ImagePreview.jsx
+│   │   │   ├── ProcessingStatus.jsx
+│   │   │   └── DownloadButton.jsx
+│   │   ├── pages/
+│   │   │   ├── Home.jsx
+│   │   │   └── Dashboard.jsx
+│   │   └── App.jsx
+├── backend/
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── auth.js
+│   │   │   └── images.js
+│   │   ├── models/
+│   │   │   ├── User.js
+│   │   │   └── Image.js
+│   │   └── server.js
+└── ml-service/
+    ├── model/
+    │   └── background_removal.py
+    └── api.py 
