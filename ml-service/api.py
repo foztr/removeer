@@ -16,8 +16,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configure memory limits
-MAX_IMAGE_SIZE = 1024 * 1024  # 1MB
-MAX_IMAGE_DIMENSION = 1024     # 1024px
+MAX_IMAGE_SIZE = 512 * 1024  # 512KB
+MAX_IMAGE_DIMENSION = 512     # 512px
 
 app = Flask(__name__)
 CORS(app)
@@ -29,6 +29,17 @@ def cleanup_memory():
         sys.clear_type_cache()
     gc.collect()
 
+def resize_image(image):
+    """Resize image if it exceeds maximum dimensions"""
+    width, height = image.size
+    if width > MAX_IMAGE_DIMENSION or height > MAX_IMAGE_DIMENSION:
+        # Calculate new dimensions maintaining aspect ratio
+        ratio = min(MAX_IMAGE_DIMENSION/width, MAX_IMAGE_DIMENSION/height)
+        new_size = (int(width * ratio), int(height * ratio))
+        logger.info(f"Resizing image from {image.size} to {new_size}")
+        return image.resize(new_size, Image.Resampling.LANCZOS)
+    return image
+
 @app.route('/')
 def health_check():
     cleanup_memory()
@@ -39,17 +50,12 @@ def health_check():
     }), 200
 
 def validate_image(image):
-    """Validate image size and dimensions"""
-    width, height = image.size
-    if width > MAX_IMAGE_DIMENSION or height > MAX_IMAGE_DIMENSION:
-        raise ValueError(f"Image dimensions exceed maximum allowed ({MAX_IMAGE_DIMENSION}px)")
-    
-    # Check file size
+    """Validate image size"""
     img_byte_arr = io.BytesIO()
-    image.save(img_byte_arr, format='PNG')
+    image.save(img_byte_arr, format='PNG', optimize=True, quality=85)
     size = img_byte_arr.tell()
     if size > MAX_IMAGE_SIZE:
-        raise ValueError(f"Image size exceeds maximum allowed ({MAX_IMAGE_SIZE/1024/1024}MB)")
+        raise ValueError(f"Image size exceeds maximum allowed ({MAX_IMAGE_SIZE/1024:.1f}KB)")
     return True
 
 @app.route('/process', methods=['POST'])
@@ -64,22 +70,29 @@ def process_image():
             logger.error("No image file in request")
             return jsonify({"error": "No image provided"}), 400
 
-        # Read the image
-        logger.info("Reading input image")
-        input_image = Image.open(file.stream)
-        logger.info(f"Input image size: {input_image.size}, mode: {input_image.mode}")
-        
-        # Validate image
+        # Read and preprocess the image
         try:
+            logger.info("Reading input image")
+            input_image = Image.open(file.stream)
+            logger.info(f"Input image size: {input_image.size}, mode: {input_image.mode}")
+            
+            # Convert to RGB if needed
+            if input_image.mode not in ('RGB', 'RGBA'):
+                logger.info(f"Converting image from {input_image.mode} to RGB")
+                input_image = input_image.convert('RGB')
+            
+            # Resize if needed
+            input_image = resize_image(input_image)
+            
+            # Validate size
             validate_image(input_image)
+            
         except ValueError as e:
             logger.error(f"Image validation failed: {str(e)}")
             return jsonify({"error": str(e)}), 400
-        
-        # Convert to RGB if needed
-        if input_image.mode not in ('RGB', 'RGBA'):
-            logger.info(f"Converting image from {input_image.mode} to RGB")
-            input_image = input_image.convert('RGB')
+        except Exception as e:
+            logger.error(f"Error preprocessing image: {str(e)}")
+            raise
         
         # Process the image with rembg
         try:
@@ -110,16 +123,16 @@ def process_image():
             
             logger.info("Image processing complete")
             
+            return send_file(
+                img_byte_arr,
+                mimetype='image/png',
+                as_attachment=True,
+                download_name='removed_bg.png'
+            )
+            
         except Exception as e:
             logger.error(f"Error saving image: {str(e)}")
             raise
-        
-        return send_file(
-            img_byte_arr,
-            mimetype='image/png',
-            as_attachment=True,
-            download_name='removed_bg.png'
-        )
     
     except Exception as e:
         logger.error(f"Error processing image: {str(e)}")
